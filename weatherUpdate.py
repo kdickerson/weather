@@ -192,26 +192,29 @@ def degToCompass(num):
     return arr[(val % 16)]
 
 def rebuild_plain_html(data):
+	data2 = data.copy()
+	data2['temp_units'] = 'F' if data['temp_units'] == 'degF' else 'C'
+	data2['wind_direction'] = degToCompass(data['wind_direction'])
 	template = Template('''<html>
 	<head>
 		<title>Dickerson Weather</title>
 	</head>
 	<body>
 		<h1>Dickerson Weather</h1>
-		<h2>Updated: ${datetime}</h2>
+		<h2>${datetime}</h2>
 
 		<h3>Outside</h3>
 		<table><tbody>
 			<tr><td>Temperature</td><td>${temp_outdoor} ${temp_units}</td></tr>
 			<tr><td>Daily High</td><td>${temp_outdoor_daily_high} ${temp_units}</td></tr>
 			<tr><td>Daily Low</td><td>${temp_outdoor_daily_low} ${temp_units}</td></tr>
-			<tr><td>Relative Humidity</td><td>${humidity_outdoor}</td></tr>
+			<tr><td>Relative Humidity</td><td>${humidity_outdoor} %</td></tr>
 			<tr><td>Pressure</td><td>${pressure_relative} ${pressure_units}</td></tr>
 			<tr><td>Wind</td><td>${wind_speed} ${wind_units} ${wind_direction}</td></tr>
 			<tr><td>Solar Radiation</td><td>${solar_radiation} ${solar_radiation_units}</td></tr>
 			<tr><td>UV</td><td>${uv} (Index: ${uv_index})</td></tr>
-			<tr><td>Hourly Rain</td><td>${rain_hourly}</td></tr>
-			<tr><td>Daily Rain</td><td>${rain_daily}</td></tr>
+			<tr><td>Hourly Rain</td><td>${rain_hourly} ${rain_units}</td></tr>
+			<tr><td>Daily Rain</td><td>${rain_daily} ${rain_units}</td></tr>
 		</tbody></table>
 
 		<h3>Inside</h3>
@@ -219,11 +222,11 @@ def rebuild_plain_html(data):
 			<tr><td>Temperature</td><td>${temp_indoor} ${temp_units}</td></tr>
 			<tr><td>Daily High</td><td>${temp_indoor_daily_high} ${temp_units}</td></tr>
 			<tr><td>Daily Low</td><td>${temp_indoor_daily_low} ${temp_units}</td></tr>
-			<tr><td>Relative Humidity</td><td>${humidity_indoor}</td></tr>
+			<tr><td>Relative Humidity</td><td>${humidity_indoor} %</td></tr>
 		</tbody></table>
 	</body>
 	</html>''')
-	html = template.substitute(data)
+	html = template.substitute(data2)
 	with open(PLAIN_HTML_PATH, 'w') as file:
 		file.write(html)
 
