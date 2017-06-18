@@ -1,0 +1,11 @@
+1. Reads data from Ambient Weather observerIP unit (by scraping html).
+
+2. Ingests data into SQLite database.
+
+3. Writes out a Cumulus-style Realtime.txt file for reading by external sources.
+
+4. Writes out HTML page for human reading.
+
+I'm using this to pull data from a WS-1400-IP station and serving it up to a Wordpress plugin (via Realtime.txt) as well as provide a human page via the HTML output.
+
+My observerIP unit is running firmware version 3.1.6.
