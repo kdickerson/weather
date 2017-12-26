@@ -7,6 +7,7 @@ from datetime import datetime
 from datetime import timedelta
 import sys
 from string import Template
+import json
 
 DB_PATH = '/home/kyle/weather/weather.db'
 SENSOR_URL = 'http://weather/livedata.htm'
@@ -105,7 +106,28 @@ def update_database(data):
 
 	db.commit()
 	fetch_aggregate_data(data, cursor)
+	fetch_historic_data(data, cursor)
 	db.close()
+
+def fetch_historic_data(data, cursor):
+	now = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
+	_24hrs_ago = (datetime.today() - timedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S')
+	data['historic'] = []
+
+	cursor.execute('SELECT datetime, temp_outdoor, humidity_outdoor, pressure_relative, wind_speed, solar_radiation, uv, temp_indoor, humidity_indoor FROM weather WHERE datetime > ? AND datetime <= ? ORDER BY datetime asc;', [_24hrs_ago, now])
+	for row in cursor.fetchall():
+		data['historic'].append({
+			'date': row[0],
+			'tempOutdoor': row[1],
+			'humidityOutdoor': row[2],
+			'pressureRelative': row[3],
+			'windSpeed': row[4],
+			'solarRadiation': row[5],
+			'uv': row[6],
+			'tempIndoor': row[7],
+			'humidityIndoor': row[8]
+		})
+	data['historic'] = data['historic'][0::5] # Every 5th element
 
 def fetch_aggregate_data(data, cursor):
 	today = datetime.today().strftime('%Y-%m-%d 00:00:00')
@@ -195,9 +217,11 @@ def rebuild_plain_html(data):
 	data2 = data.copy()
 	data2['temp_units'] = 'F' if data['temp_units'] == 'degF' else 'C'
 	data2['wind_direction'] = degToCompass(data['wind_direction'])
-	template = Template('''<html>
+	data2['historic'] = json.dumps(data['historic'])
+	template = Template('''<!DOCTYPE html>
 	<head>
 		<title>Dickerson Weather</title>
+		<meta charset="UTF-8">
 	</head>
 	<body>
 		<h1>Dickerson Weather</h1>
@@ -205,25 +229,65 @@ def rebuild_plain_html(data):
 
 		<h3>Outside</h3>
 		<table><tbody>
-			<tr><td>Temperature</td><td>${temp_outdoor} ${temp_units}</td></tr>
+			<tr><td>Temperature</td><td>${temp_outdoor} ${temp_units}</td><td><canvas id="tempOutdoor"></canvas></td></tr>
 			<tr><td>Daily High</td><td>${temp_outdoor_daily_high} ${temp_units}</td></tr>
 			<tr><td>Daily Low</td><td>${temp_outdoor_daily_low} ${temp_units}</td></tr>
-			<tr><td>Relative Humidity</td><td>${humidity_outdoor} %</td></tr>
-			<tr><td>Pressure</td><td>${pressure_relative} ${pressure_units}</td></tr>
-			<tr><td>Wind</td><td>${wind_speed} ${wind_units} ${wind_direction}</td></tr>
-			<tr><td>Solar Radiation</td><td>${solar_radiation} ${solar_radiation_units}</td></tr>
-			<tr><td>UV</td><td>${uv} (Index: ${uv_index})</td></tr>
+			<tr><td>Relative Humidity</td><td>${humidity_outdoor} %</td><td><canvas id="humidityOutdoor"></canvas></td></tr>
+			<tr><td>Pressure</td><td>${pressure_relative} ${pressure_units}</td><td><canvas id="pressureRelative"></canvas></td></tr>
+			<tr><td>Wind</td><td>${wind_speed} ${wind_units} ${wind_direction}</td><td><canvas id="windSpeed"></canvas></td></tr>
+			<tr><td>Solar Radiation</td><td>${solar_radiation} ${solar_radiation_units}</td><td><canvas id="solarRadiation"></canvas></td></tr>
+			<tr><td>UV</td><td>${uv} (Index: ${uv_index})</td><td><canvas id="uv"></canvas></td></tr>
 			<tr><td>Hourly Rain</td><td>${rain_hourly} ${rain_units}</td></tr>
 			<tr><td>Daily Rain</td><td>${rain_daily} ${rain_units}</td></tr>
 		</tbody></table>
 
 		<h3>Inside</h3>
 		<table><tbody>
-			<tr><td>Temperature</td><td>${temp_indoor} ${temp_units}</td></tr>
+			<tr><td>Temperature</td><td>${temp_indoor} ${temp_units}</td><td><canvas id="tempIndoor"></canvas></td></tr>
 			<tr><td>Daily High</td><td>${temp_indoor_daily_high} ${temp_units}</td></tr>
 			<tr><td>Daily Low</td><td>${temp_indoor_daily_low} ${temp_units}</td></tr>
-			<tr><td>Relative Humidity</td><td>${humidity_indoor} %</td></tr>
+			<tr><td>Relative Humidity</td><td>${humidity_indoor} %</td><td><canvas id="humidityIndoor"></canvas></td></tr>
 		</tbody></table>
+
+		<script src="Chart.bundle.min.js"></script>
+		<script>
+			(function() {
+				"use strict";
+
+				var weatherData = ${historic};
+
+				function buildChart(canvasId, data, xKey, yKey) {
+					var canvas = document.getElementById(canvasId);
+					if (!canvas) {console.log('No element found with ID' + canvasId); return;}
+					canvas.style.width = '750px';
+					canvas.style.height = '100px';
+					var ctx = canvas.getContext('2d');
+
+					var extractedData = [];
+					data.forEach(function(entry) {
+					  extractedData.push({x: entry[xKey], y: entry[yKey]});
+					});
+
+					var myChart = new Chart(ctx, {
+						type: 'line',
+						data: {datasets: [{data: extractedData, pointRadius: 0}]},
+						options: {
+							legend: {display: false},
+							scales: {xAxes: [{type: "time"}]}
+						}
+					});
+				}
+
+				buildChart('tempOutdoor', weatherData, 'date', 'tempOutdoor');
+				buildChart('humidityOutdoor', weatherData, 'date', 'humidityOutdoor');
+				buildChart('pressureRelative', weatherData, 'date', 'pressureRelative');
+				buildChart('windSpeed', weatherData, 'date', 'windSpeed');
+				buildChart('solarRadiation', weatherData, 'date', 'solarRadiation');
+				buildChart('uv', weatherData, 'date', 'uv');
+				buildChart('tempIndoor', weatherData, 'date', 'tempIndoor');
+				buildChart('humidityIndoor', weatherData, 'date', 'humidityIndoor');
+			})();
+		</script>
 	</body>
 	</html>''')
 	html = template.substitute(data2)
