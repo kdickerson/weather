@@ -114,7 +114,7 @@ def fetch_historic_data(data, cursor):
 	_24hrs_ago = (datetime.today() - timedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S')
 	data['historic'] = []
 
-	cursor.execute('SELECT datetime, temp_outdoor, humidity_outdoor, pressure_relative, wind_speed, solar_radiation, uv, temp_indoor, humidity_indoor FROM weather WHERE datetime > ? AND datetime <= ? ORDER BY datetime asc;', [_24hrs_ago, now])
+	cursor.execute('SELECT datetime, temp_outdoor, humidity_outdoor, pressure_relative, wind_speed, solar_radiation, uv, temp_indoor, humidity_indoor, rain_hourly FROM weather WHERE datetime > ? AND datetime <= ? ORDER BY datetime asc;', [_24hrs_ago, now])
 	for row in cursor.fetchall():
 		data['historic'].append({
 			'date': row[0],
@@ -125,7 +125,8 @@ def fetch_historic_data(data, cursor):
 			'solarRadiation': row[5],
 			'uv': row[6],
 			'tempIndoor': row[7],
-			'humidityIndoor': row[8]
+			'humidityIndoor': row[8],
+			'rainHourly': row[9]
 		})
 	data['historic'] = data['historic'][0::5] # Every 5th element
 
@@ -237,7 +238,7 @@ def rebuild_plain_html(data):
 			<tr><td>Wind</td><td>${wind_speed} ${wind_units} ${wind_direction}</td><td><canvas id="windSpeed"></canvas></td></tr>
 			<tr><td>Solar Radiation</td><td>${solar_radiation} ${solar_radiation_units}</td><td><canvas id="solarRadiation"></canvas></td></tr>
 			<tr><td>UV</td><td>${uv} (Index: ${uv_index})</td><td><canvas id="uv"></canvas></td></tr>
-			<tr><td>Hourly Rain</td><td>${rain_hourly} ${rain_units}</td></tr>
+			<tr><td>Hourly Rain</td><td>${rain_hourly} ${rain_units}</td><td><canvas id="rainHourly"></canvas></td></tr>
 			<tr><td>Daily Rain</td><td>${rain_daily} ${rain_units}</td></tr>
 		</tbody></table>
 
@@ -286,6 +287,7 @@ def rebuild_plain_html(data):
 				buildChart('uv', weatherData, 'date', 'uv');
 				buildChart('tempIndoor', weatherData, 'date', 'tempIndoor');
 				buildChart('humidityIndoor', weatherData, 'date', 'humidityIndoor');
+				buildChart('rainHourly', weatherData, 'date', 'rainHourly');
 			})();
 		</script>
 	</body>
