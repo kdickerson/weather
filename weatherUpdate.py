@@ -142,7 +142,7 @@ def fetch_aggregate_data(data, cursor):
 	data['temp_indoor_daily_low_time'], data['temp_indoor_daily_low'] = cursor.fetchone()
 	data['temp_indoor_daily_low_time'] = datetime.strptime(data['temp_indoor_daily_low_time'], '%Y-%m-%d %H:%M:%S')
 
-	
+
 	cursor.execute('SELECT datetime, MAX(temp_outdoor) FROM weather WHERE datetime >= ? AND datetime < ?;', [today, tomorrow])
 	data['temp_outdoor_daily_high_time'], data['temp_outdoor_daily_high'] = cursor.fetchone()
 	data['temp_outdoor_daily_high_time'] = datetime.strptime(data['temp_outdoor_daily_high_time'], '%Y-%m-%d %H:%M:%S')
@@ -175,13 +175,13 @@ def fetch_data():
 
 	data['wind_units'] = soup.find('select', attrs={'name':'unit_Wind'}).find('option', selected=True).string
 	data['rain_units'] = soup.find('select', attrs={'name':'u_Rainfall'}).find('option', selected=True).string
-	data['pressure_units'] = soup.find('select', attrs={'name':'unit_Pressure'}).find('option', selected=True).string 
+	data['pressure_units'] = soup.find('select', attrs={'name':'unit_Pressure'}).find('option', selected=True).string
 	data['temp_units'] = soup.find('select', attrs={'name':'u_Temperature'}).find('option', selected=True).string
 	data['solar_radiation_units'] = soup.find('select', attrs={'name':'unit_Solar'}).find('option', selected=True).string
 
 	response = urllib2.urlopen(SENSOR_URL).read()
 	soup = BeautifulSoup(response, 'html.parser')
-	
+
 	data['datetime'] = datetime.strptime(soup.find('input', attrs={'name':'CurrTime'})['value'], '%H:%M %m/%d/%Y')
 
 	data['battery_indoor'] = soup.find('input', attrs={'name':'inBattSta'})['value']
@@ -381,7 +381,7 @@ if __name__ == "__main__":
 	except Exception as e:
 		print("%s: Cumulus TXT Rebuild Failed" % datetime.today())
 		print(e)
-	
+
 	try:
 		rebuild_plain_html(data)
 	except Exception as e:
