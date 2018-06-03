@@ -184,6 +184,9 @@ def fetch_data():
 	
 	data['datetime'] = datetime.strptime(soup.find('input', attrs={'name':'CurrTime'})['value'], '%H:%M %m/%d/%Y')
 
+	data['battery_indoor'] = soup.find('input', attrs={'name':'inBattSta'})['value']
+	data['battery_outdoor'] = soup.find('input', attrs={'name':'outBattSta1'})['value']
+
 	data['temp_indoor'] = float(soup.find('input', attrs={'name':'inTemp'})['value'])
 	data['temp_outdoor'] = float(soup.find('input', attrs={'name':'outTemp'})['value'])
 
@@ -230,6 +233,7 @@ def rebuild_plain_html(data):
 
 		<h3>Outside</h3>
 		<table><tbody>
+			<tr><td>Battery Status</td><td>${battery_outdoor}</td><td>&nbsp;</td></tr>
 			<tr><td>Temperature</td><td>${temp_outdoor} ${temp_units}</td><td><canvas id="tempOutdoor"></canvas></td></tr>
 			<tr><td>Daily High</td><td>${temp_outdoor_daily_high} ${temp_units}</td></tr>
 			<tr><td>Daily Low</td><td>${temp_outdoor_daily_low} ${temp_units}</td></tr>
@@ -244,6 +248,7 @@ def rebuild_plain_html(data):
 
 		<h3>Inside</h3>
 		<table><tbody>
+			<tr><td>Battery Status</td><td>${battery_indoor}</td><td>&nbsp;</td></tr>
 			<tr><td>Temperature</td><td>${temp_indoor} ${temp_units}</td><td><canvas id="tempIndoor"></canvas></td></tr>
 			<tr><td>Daily High</td><td>${temp_indoor_daily_high} ${temp_units}</td></tr>
 			<tr><td>Daily Low</td><td>${temp_indoor_daily_low} ${temp_units}</td></tr>
