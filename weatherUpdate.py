@@ -234,9 +234,13 @@ def rebuild_plain_html(data):
 		<h3>Outside</h3>
 		<table><tbody>
 			<tr><td>Battery Status</td><td>${battery_outdoor}</td><td>&nbsp;</td></tr>
-			<tr><td>Temperature</td><td>${temp_outdoor} ${temp_units}</td><td><canvas id="tempOutdoor"></canvas></td></tr>
-			<tr><td>Daily High</td><td>${temp_outdoor_daily_high} ${temp_units}</td></tr>
-			<tr><td>Daily Low</td><td>${temp_outdoor_daily_low} ${temp_units}</td></tr>
+			<tr><td>Temperature</td>
+				<td style="text-align:right;">
+					Daily High: ${temp_outdoor_daily_high} ${temp_units}
+					<br>${temp_outdoor} ${temp_units}
+					<br>Daily Low: ${temp_outdoor_daily_low} ${temp_units}
+				</td>
+				<td><canvas id="tempOutdoor"></canvas></td></tr>
 			<tr><td>Relative Humidity</td><td>${humidity_outdoor} %</td><td><canvas id="humidityOutdoor"></canvas></td></tr>
 			<tr><td>Pressure</td><td>${pressure_relative} ${pressure_units}</td><td><canvas id="pressureRelative"></canvas></td></tr>
 			<tr><td>Wind</td><td>${wind_speed} ${wind_units} ${wind_direction}</td><td><canvas id="windSpeed"></canvas></td></tr>
@@ -249,9 +253,13 @@ def rebuild_plain_html(data):
 		<h3>Inside</h3>
 		<table><tbody>
 			<tr><td>Battery Status</td><td>${battery_indoor}</td><td>&nbsp;</td></tr>
-			<tr><td>Temperature</td><td>${temp_indoor} ${temp_units}</td><td><canvas id="tempIndoor"></canvas></td></tr>
-			<tr><td>Daily High</td><td>${temp_indoor_daily_high} ${temp_units}</td></tr>
-			<tr><td>Daily Low</td><td>${temp_indoor_daily_low} ${temp_units}</td></tr>
+			<tr><td>Temperature</td>
+				<td style="text-align:right;">
+					Daily High: ${temp_indoor_daily_high} ${temp_units}
+					<br>${temp_indoor} ${temp_units}
+					<br>Daily Low: ${temp_indoor_daily_low} ${temp_units}
+				</td>
+				<td><canvas id="tempIndoor"></canvas></td></tr>
 			<tr><td>Relative Humidity</td><td>${humidity_indoor} %</td><td><canvas id="humidityIndoor"></canvas></td></tr>
 		</tbody></table>
 
