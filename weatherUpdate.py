@@ -10,8 +10,8 @@ from string import Template
 import json
 
 DB_PATH = '/home/kyle/weather/weather.db'
-SENSOR_URL = 'http://weather/livedata.htm'
-UNITS_URL = 'http://weather/station.htm'
+SENSOR_URL = 'http://192.168.1.55/livedata.htm'
+UNITS_URL = 'http://192.168.1.55/station.htm'
 CUMULUS_TXT_PATH = '/var/www/weather/Realtime.txt'
 PLAIN_HTML_PATH = '/var/www/weather/index.html'
 
@@ -411,4 +411,3 @@ if __name__ == "__main__":
 	except Exception as e:
 		print("%s: Plain HTML Rebuild Failed" % datetime.today())
 		print(e)
-
