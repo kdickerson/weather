@@ -114,7 +114,7 @@ def fetch_historic_data(data, cursor):
 	_24hrs_ago = (datetime.today() - timedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S')
 	data['historic'] = []
 
-	cursor.execute('SELECT datetime, temp_outdoor, humidity_outdoor, pressure_relative, wind_speed, solar_radiation, uv, temp_indoor, humidity_indoor, rain_hourly FROM weather WHERE datetime > ? AND datetime <= ? ORDER BY datetime asc;', [_24hrs_ago, now])
+	cursor.execute('SELECT datetime, temp_outdoor, humidity_outdoor, pressure_relative, wind_speed, wind_gust, solar_radiation, uv, temp_indoor, humidity_indoor, rain_hourly FROM weather WHERE datetime > ? AND datetime <= ? ORDER BY datetime asc;', [_24hrs_ago, now])
 	for row in cursor.fetchall():
 		data['historic'].append({
 			'date': row[0],
@@ -122,11 +122,12 @@ def fetch_historic_data(data, cursor):
 			'humidityOutdoor': row[2],
 			'pressureRelative': row[3],
 			'windSpeed': row[4],
-			'solarRadiation': row[5],
-			'uv': row[6],
-			'tempIndoor': row[7],
-			'humidityIndoor': row[8],
-			'rainHourly': row[9]
+			'windGust': row[5],
+			'solarRadiation': row[6],
+			'uv': row[7],
+			'tempIndoor': row[8],
+			'humidityIndoor': row[9],
+			'rainHourly': row[10],
 		})
 	data['historic'] = data['historic'][0::5] # Every 5th element
 
@@ -243,7 +244,11 @@ def rebuild_plain_html(data):
 				<td><canvas id="tempOutdoor"></canvas></td></tr>
 			<tr><td>Relative Humidity</td><td>${humidity_outdoor} %</td><td><canvas id="humidityOutdoor"></canvas></td></tr>
 			<tr><td>Pressure</td><td>${pressure_relative} ${pressure_units}</td><td><canvas id="pressureRelative"></canvas></td></tr>
-			<tr><td>Wind</td><td>${wind_speed} ${wind_units} ${wind_direction}</td><td><canvas id="windSpeed"></canvas></td></tr>
+			<tr><td>Wind/Gust</td>
+				<td>${wind_speed}/${wind_gust} ${wind_units} ${wind_direction}
+					<br>Daily Max: ${wind_gust_daily_max}
+				</td>
+				<td><canvas id="windSpeed"></canvas></td></tr>
 			<tr><td>Solar Radiation</td><td>${solar_radiation} ${solar_radiation_units}</td><td><canvas id="solarRadiation"></canvas></td></tr>
 			<tr><td>UV</td><td>${uv} (Index: ${uv_index})</td><td><canvas id="uv"></canvas></td></tr>
 			<tr><td>Hourly Rain</td><td>${rain_hourly} ${rain_units}</td><td><canvas id="rainHourly"></canvas></td></tr>
@@ -270,21 +275,32 @@ def rebuild_plain_html(data):
 
 				var weatherData = ${historic};
 
-				function buildChart(canvasId, data, xKey, yKey) {
+				function buildChart(canvasId, data, xKey, yKey, yKey2) {
 					var canvas = document.getElementById(canvasId);
 					if (!canvas) {console.log('No element found with ID' + canvasId); return;}
 					canvas.style.width = '750px';
 					canvas.style.height = '100px';
 					var ctx = canvas.getContext('2d');
 
+					var datasets = [];
+
 					var extractedData = [];
 					data.forEach(function(entry) {
-					  extractedData.push({x: entry[xKey], y: entry[yKey]});
+						extractedData.push({x: entry[xKey], y: entry[yKey]});
 					});
+					datasets.push({data: extractedData, label: yKey, pointRadius: 0});
+
+					if (yKey2) {
+						extractedData = [];
+						data.forEach(function(entry) {
+							extractedData.push({x: entry[xKey], y: entry[yKey2]});
+						});
+						datasets.push({data: extractedData, fill: false, label: yKey2, pointRadius: 0});
+					}
 
 					var myChart = new Chart(ctx, {
 						type: 'line',
-						data: {datasets: [{data: extractedData, pointRadius: 0}]},
+						data: {datasets: datasets},
 						options: {
 							legend: {display: false},
 							scales: {xAxes: [{type: "time"}]}
@@ -295,7 +311,7 @@ def rebuild_plain_html(data):
 				buildChart('tempOutdoor', weatherData, 'date', 'tempOutdoor');
 				buildChart('humidityOutdoor', weatherData, 'date', 'humidityOutdoor');
 				buildChart('pressureRelative', weatherData, 'date', 'pressureRelative');
-				buildChart('windSpeed', weatherData, 'date', 'windSpeed');
+				buildChart('windSpeed', weatherData, 'date', 'windSpeed', 'windGust');
 				buildChart('solarRadiation', weatherData, 'date', 'solarRadiation');
 				buildChart('uv', weatherData, 'date', 'uv');
 				buildChart('tempIndoor', weatherData, 'date', 'tempIndoor');
