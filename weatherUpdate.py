@@ -1,5 +1,7 @@
 #!/usr/bin/python
+# coding=utf-8
 
+import codecs
 import sqlite3
 import urllib2
 from bs4 import BeautifulSoup
@@ -29,6 +31,7 @@ def update_database(data):
 			temp_units TEXT,
 			humidity_indoor INTEGER,
 			humidity_outdoor INTEGER,
+			pm25_outdoor INTEGER,
 			pressure_absolute REAL,
 			pressure_relative REAL,
 			pressure_units TEXT,
@@ -57,6 +60,7 @@ def update_database(data):
 	ordered_data.append(data['temp_units'])
 	ordered_data.append(data['humidity_indoor'])
 	ordered_data.append(data['humidity_outdoor'])
+	ordered_data.append(data['pm25_outdoor'])
 	ordered_data.append(data['pressure_absolute'])
 	ordered_data.append(data['pressure_relative'])
 	ordered_data.append(data['pressure_units'])
@@ -83,6 +87,7 @@ def update_database(data):
 			temp_units,
 			humidity_indoor,
 			humidity_outdoor,
+			pm25_outdoor,
 			pressure_absolute,
 			pressure_relative,
 			pressure_units,
@@ -101,7 +106,7 @@ def update_database(data):
 			rain_yearly,
 			rain_units
 		)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	""", ordered_data)
 
 	db.commit()
@@ -114,20 +119,21 @@ def fetch_historic_data(data, cursor):
 	_24hrs_ago = (datetime.today() - timedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S')
 	data['historic'] = []
 
-	cursor.execute('SELECT datetime, temp_outdoor, humidity_outdoor, pressure_relative, wind_speed, wind_gust, solar_radiation, uv, temp_indoor, humidity_indoor, rain_hourly FROM weather WHERE datetime > ? AND datetime <= ? ORDER BY datetime asc;', [_24hrs_ago, now])
+	cursor.execute('SELECT datetime, temp_outdoor, pm25_outdoor, humidity_outdoor, pressure_relative, wind_speed, wind_gust, solar_radiation, uv, temp_indoor, humidity_indoor, rain_hourly FROM weather WHERE datetime > ? AND datetime <= ? ORDER BY datetime asc;', [_24hrs_ago, now])
 	for row in cursor.fetchall():
 		data['historic'].append({
 			'date': row[0],
 			'tempOutdoor': row[1],
-			'humidityOutdoor': row[2],
-			'pressureRelative': row[3],
-			'windSpeed': row[4],
-			'windGust': row[5],
-			'solarRadiation': row[6],
-			'uv': row[7],
-			'tempIndoor': row[8],
-			'humidityIndoor': row[9],
-			'rainHourly': row[10],
+			'pm25Outdoor': row[2],
+			'humidityOutdoor': row[3],
+			'pressureRelative': row[4],
+			'windSpeed': row[5],
+			'windGust': row[6],
+			'solarRadiation': row[7],
+			'uv': row[8],
+			'tempIndoor': row[9],
+			'humidityIndoor': row[10],
+			'rainHourly': row[11],
 		})
 	data['historic'] = data['historic'][0::5] # Every 5th element
 
@@ -151,6 +157,16 @@ def fetch_aggregate_data(data, cursor):
 	cursor.execute('SELECT datetime, MIN(temp_outdoor) FROM weather WHERE datetime >= ? AND datetime < ?;', [today, tomorrow])
 	data['temp_outdoor_daily_low_time'], data['temp_outdoor_daily_low'] = cursor.fetchone()
 	data['temp_outdoor_daily_low_time'] = datetime.strptime(data['temp_outdoor_daily_low_time'], '%Y-%m-%d %H:%M:%S')
+
+
+	cursor.execute('SELECT datetime, MAX(pm25_outdoor) FROM weather WHERE datetime >= ? AND datetime < ?;', [today, tomorrow])
+	data['pm25_outdoor_daily_high_time'], data['pm25_outdoor_daily_high'] = cursor.fetchone()
+	data['pm25_outdoor_daily_high_time'] = datetime.strptime(data['pm25_outdoor_daily_high_time'], '%Y-%m-%d %H:%M:%S')
+
+	cursor.execute('SELECT datetime, MIN(pm25_outdoor) FROM weather WHERE datetime >= ? AND datetime < ?;', [today, tomorrow])
+	data['pm25_outdoor_daily_low_time'], data['pm25_outdoor_daily_low'] = cursor.fetchone()
+	data['pm25_outdoor_daily_low_time'] = datetime.strptime(data['pm25_outdoor_daily_low_time'], '%Y-%m-%d %H:%M:%S')
+
 
 	cursor.execute('SELECT datetime, MAX(pressure_relative) FROM weather WHERE datetime >= ? AND datetime < ?;', [today, tomorrow])
 	data['pressure_relative_daily_high_time'], data['pressure_relative_daily_high'] = cursor.fetchone()
@@ -211,6 +227,8 @@ def fetch_data():
 	data['rain_monthly'] = float(soup.find('input', attrs={'name':'rainofmonthly'})['value'])
 	data['rain_yearly'] = float(soup.find('input', attrs={'name':'rainofyearly'})['value'])
 
+	data['pm25_outdoor'] = int(round(float(soup.find('input', attrs={'name':'pm25'})['value'])))
+
 	return data
 
 def degToCompass(num):
@@ -223,7 +241,7 @@ def rebuild_plain_html(data):
 	data2['temp_units'] = 'F' if data['temp_units'] == 'degF' else 'C'
 	data2['wind_direction'] = degToCompass(data['wind_direction'])
 	data2['historic'] = json.dumps(data['historic'])
-	template = Template('''<!DOCTYPE html>
+	template = Template(u'''<!DOCTYPE html>
 	<head>
 		<title>Dickerson Weather</title>
 		<meta charset="UTF-8">
@@ -242,6 +260,13 @@ def rebuild_plain_html(data):
 					<br>Daily Low: ${temp_outdoor_daily_low} ${temp_units}
 				</td>
 				<td><canvas id="tempOutdoor"></canvas></td></tr>
+			<tr><td>PM2.5</td>
+				<td style="text-align:right;">
+					Daily High: ${pm25_outdoor_daily_high} µg/m<sup>3</sup>
+					<br>${pm25_outdoor} µg/m<sup>3</sup>
+					<br>Daily Low: ${pm25_outdoor_daily_low} µg/m<sup>3</sup>
+				</td>
+				<td><canvas id="pm25Outdoor"></canvas></td></tr>
 			<tr><td>Relative Humidity</td><td>${humidity_outdoor} %</td><td><canvas id="humidityOutdoor"></canvas></td></tr>
 			<tr><td>Pressure</td><td>${pressure_relative} ${pressure_units}</td><td><canvas id="pressureRelative"></canvas></td></tr>
 			<tr><td>Wind/Gust</td>
@@ -309,6 +334,7 @@ def rebuild_plain_html(data):
 				}
 
 				buildChart('tempOutdoor', weatherData, 'date', 'tempOutdoor');
+				buildChart('pm25Outdoor', weatherData, 'date', 'pm25Outdoor');
 				buildChart('humidityOutdoor', weatherData, 'date', 'humidityOutdoor');
 				buildChart('pressureRelative', weatherData, 'date', 'pressureRelative');
 				buildChart('windSpeed', weatherData, 'date', 'windSpeed', 'windGust');
@@ -322,7 +348,7 @@ def rebuild_plain_html(data):
 	</body>
 	</html>''')
 	html = template.substitute(data2)
-	with open(PLAIN_HTML_PATH, 'w') as file:
+	with codecs.open(PLAIN_HTML_PATH, 'w', encoding='utf-8') as file:
 		file.write(html)
 
 def rebuild_cumulus_txt(data):
@@ -411,3 +437,4 @@ if __name__ == "__main__":
 	except Exception as e:
 		print("%s: Plain HTML Rebuild Failed" % datetime.today())
 		print(e)
+
