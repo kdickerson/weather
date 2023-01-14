@@ -227,7 +227,11 @@ def fetch_data():
 	data['rain_monthly'] = float(soup.find('input', attrs={'name':'rainofmonthly'})['value'])
 	data['rain_yearly'] = float(soup.find('input', attrs={'name':'rainofyearly'})['value'])
 
-	data['pm25_outdoor'] = int(round(float(soup.find('input', attrs={'name':'pm25'})['value'])))
+	try:
+		data['pm25_outdoor'] = int(round(float(soup.find('input', attrs={'name':'pm25'})['value'])))
+	except:
+		print('Failed to retrieve PM2.5 value')
+		data['pm25_outdoor'] = None
 
 	return data
 
