@@ -187,7 +187,7 @@ def fetch_aggregate_data(data, cursor):
 def fetch_data():
 	data = {}
 
-	response = request.urlopen(UNITS_URL).read()
+	response = request.urlopen(UNITS_URL, timeout=30).read()
 	soup = BeautifulSoup(response, 'html.parser')
 
 	data['wind_units'] = soup.find('select', attrs={'name':'unit_Wind'}).find('option', selected=True).string
@@ -196,7 +196,7 @@ def fetch_data():
 	data['temp_units'] = soup.find('select', attrs={'name':'u_Temperature'}).find('option', selected=True).string
 	data['solar_radiation_units'] = soup.find('select', attrs={'name':'unit_Solar'}).find('option', selected=True).string
 
-	response = request.urlopen(SENSOR_URL).read()
+	response = request.urlopen(SENSOR_URL, timeout=30).read()
 	soup = BeautifulSoup(response, 'html.parser')
 
 	data['datetime'] = datetime.strptime(soup.find('input', attrs={'name':'CurrTime'})['value'], '%H:%M %m/%d/%Y')
