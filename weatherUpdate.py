@@ -242,6 +242,12 @@ def degToCompass(num):
 
 def rebuild_plain_html(data):
 	data2 = data.copy()
+	data2['aqi_outdoor'] = calculate_aqi(data2['pm25_outdoor'])
+	data2['aqi_outdoor_daily_high'] = calculate_aqi(data2['pm25_outdoor_daily_high'])
+	data2['aqi_outdoor_daily_low'] = calculate_aqi(data2['pm25_outdoor_daily_low'])
+	data2['aqi_text'] = aqi_text(data2['aqi_outdoor'])
+	for entry in data2['historic']:
+		entry['aqiOutdoor'] = calculate_aqi(entry['pm25Outdoor'])
 	data2['temp_units'] = 'F' if data['temp_units'] == 'degF' else 'C'
 	data2['wind_direction'] = degToCompass(data['wind_direction'])
 	data2['historic'] = json.dumps(data['historic'])
@@ -271,6 +277,13 @@ def rebuild_plain_html(data):
 					<br>Daily Low: ${pm25_outdoor_daily_low} µg/m<sup>3</sup>
 				</td>
 				<td><canvas id="pm25Outdoor"></canvas></td></tr>
+			<tr><td>AQI (PM2.5 only)</td>
+				<td style="text-align:right;">
+					Daily High: ${aqi_outdoor_daily_high}
+					<br>${aqi_outdoor}: ${aqi_text}
+					<br>Daily Low: ${aqi_outdoor_daily_low}
+				</td>
+				<td><canvas id="aqiOutdoor"></canvas></td></tr>
 			<tr><td>Relative Humidity</td><td>${humidity_outdoor} %</td><td><canvas id="humidityOutdoor"></canvas></td></tr>
 			<tr><td>Pressure</td><td>${pressure_relative} ${pressure_units}</td><td><canvas id="pressureRelative"></canvas></td></tr>
 			<tr><td>Wind/Gust</td>
@@ -339,6 +352,7 @@ def rebuild_plain_html(data):
 
 				buildChart('tempOutdoor', weatherData, 'date', 'tempOutdoor');
 				buildChart('pm25Outdoor', weatherData, 'date', 'pm25Outdoor');
+				buildChart('aqiOutdoor', weatherData, 'date', 'aqiOutdoor');
 				buildChart('humidityOutdoor', weatherData, 'date', 'humidityOutdoor');
 				buildChart('pressureRelative', weatherData, 'date', 'pressureRelative');
 				buildChart('windSpeed', weatherData, 'date', 'windSpeed', 'windGust');
@@ -414,6 +428,51 @@ def rebuild_cumulus_txt(data):
 	vals[57] = '1' if data['uv'] > 500 else '0' # Is Sunny -- 500 arbitrarily chosen
 	with open(CUMULUS_TXT_PATH, 'w') as file:
 		file.write(' '.join([str(x) for x in vals]))
+
+
+def get_aqi_breakpoints(pm25):
+	if pm25 <= 12.0:
+		return {'c_low': 0, 'c_high': 12, 'i_low': 0, 'i_high': 50}
+	if pm25 <= 35.4:
+		return {'c_low': 12.1, 'c_high': 35.4, 'i_low': 51, 'i_high': 100}
+	if pm25 <= 55.4:
+		return {'c_low': 35.5, 'c_high': 55.4, 'i_low': 101, 'i_high': 150}
+	if pm25 <= 150.4:
+		return {'c_low': 55.5, 'c_high': 150.4, 'i_low': 151, 'i_high': 200}
+	if pm25 <= 250.4:
+		return {'c_low': 150.5, 'c_high': 250.4, 'i_low': 201, 'i_high': 300}
+	if pm25 <= 350.4:
+		return {'c_low': 250.5, 'c_high': 350.4, 'i_low': 301, 'i_high': 400}
+	else:
+		return {'c_low': 350.5, 'c_high': 500.4, 'i_low': 401, 'i_high': 500}
+
+
+def aqi_text(aqi):
+	if aqi is None:
+		return "Unknown"
+	if aqi <= 50:
+		return "Good"
+	if aqi <= 100:
+		return "Moderate"
+	if aqi <= 150:
+		return "USG"
+	if aqi <= 200:
+		return "Unhealthy"
+	if aqi <= 300:
+		return "Very Unhealthy"
+	else:
+		return "Hazardous"
+
+
+def calculate_aqi(pm25):
+	# pm25 in micrograms per cubic meter
+	if pm25 is None:
+		return None
+	breakpoints = get_aqi_breakpoints(pm25)
+	aqi = breakpoints['i_high'] - breakpoints['i_low']
+	aqi = aqi / (breakpoints['c_high'] - breakpoints['c_low'])
+	aqi = aqi * (pm25 - breakpoints['c_low'])
+	return round(aqi + breakpoints['i_low'])
 
 
 if __name__ == "__main__":
