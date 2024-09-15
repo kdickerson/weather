@@ -240,8 +240,16 @@ def degToCompass(num):
 	arr=["N","NNE","NE","ENE","E","ESE", "SE", "SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"]
 	return arr[(val % 16)]
 
+MM_PER_IN = 25.4
+
 def rebuild_plain_html(data):
 	data2 = data.copy()
+	if data2['pressure_units'] == 'inhg':
+		data2['pressure_units'] = 'mmhg'
+		data2['pressure_relative'] = round(data2['pressure_relative'] * MM_PER_IN, 1)
+		for entry in data2['historic']:
+			entry['pressureRelative'] = round(entry['pressureRelative'] * MM_PER_IN, 1)
+
 	data2['aqi_outdoor'] = calculate_aqi(data2['pm25_outdoor'])
 	data2['aqi_outdoor_daily_high'] = calculate_aqi(data2['pm25_outdoor_daily_high'])
 	data2['aqi_outdoor_daily_low'] = calculate_aqi(data2['pm25_outdoor_daily_low'])
