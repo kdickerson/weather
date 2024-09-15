@@ -289,24 +289,24 @@ def rebuild_plain_html(data):
 					<br>${pm25_outdoor} µg/m<sup>3</sup>
 					<br>Daily Low: ${pm25_outdoor_daily_low} µg/m<sup>3</sup>
 				</td>
-				<td><canvas id="pm25Outdoor"></canvas></td></tr>
+				<td><canvas id="pm25Outdoor" data-min="0"></canvas></td></tr>
 			<tr><td>AQI (PM2.5 only)</td>
 				<td style="text-align:right;">
 					Daily High: ${aqi_outdoor_daily_high}
 					<br>${aqi_outdoor}: ${aqi_text}
 					<br>Daily Low: ${aqi_outdoor_daily_low}
 				</td>
-				<td><canvas id="aqiOutdoor"></canvas></td></tr>
+				<td><canvas id="aqiOutdoor" data-min="0"></canvas></td></tr>
 			<tr><td>Relative Humidity</td><td>${humidity_outdoor} %</td><td><canvas id="humidityOutdoor" data-min="0" data-max="100"></canvas></td></tr>
 			<tr><td>Pressure</td><td>${pressure_relative} ${pressure_units}</td><td><canvas id="pressureRelative" data-min="${pressure_range_min}" data-max="${pressure_range_max}"></canvas></td></tr>
 			<tr><td>Wind/Gust</td>
 				<td>${wind_speed}/${wind_gust} ${wind_units} ${wind_direction}
 					<br>Daily Max: ${wind_gust_daily_max}
 				</td>
-				<td><canvas id="windSpeed"></canvas></td></tr>
-			<tr><td>Solar Radiation</td><td>${solar_radiation} ${solar_radiation_units}</td><td><canvas id="solarRadiation"></canvas></td></tr>
-			<tr><td>UV</td><td>${uv} (Index: ${uv_index})</td><td><canvas id="uv"></canvas></td></tr>
-			<tr><td>Hourly Rain</td><td>${rain_hourly} ${rain_units}</td><td><canvas id="rainHourly"></canvas></td></tr>
+				<td><canvas id="windSpeed" data-min="0"></canvas></td></tr>
+			<tr><td>Solar Radiation</td><td>${solar_radiation} ${solar_radiation_units}</td><td><canvas id="solarRadiation" data-min="0"></canvas></td></tr>
+			<tr><td>UV</td><td>${uv} (Index: ${uv_index})</td><td><canvas id="uv" data-min="0"></canvas></td></tr>
+			<tr><td>Hourly Rain</td><td>${rain_hourly} ${rain_units}</td><td><canvas id="rainHourly" data-min="0"></canvas></td></tr>
 			<tr><td>Daily Rain</td><td>${rain_daily} ${rain_units}</td></tr>
 		</tbody></table>
 
