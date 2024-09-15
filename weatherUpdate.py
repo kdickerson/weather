@@ -348,12 +348,18 @@ def rebuild_plain_html(data):
 						datasets.push({data: extractedData, fill: false, label: yKey2, pointRadius: 0});
 					}
 
+					const scales = {xAxes: [{type: "time"}]};
+					const ticks = {};
+					if (canvas.dataset.min) {ticks.min = parseFloat(canvas.dataset.min);}
+					if (canvas.dataset.max) {ticks.max = parseFloat(canvas.dataset.max);}
+					if (Object.keys(ticks).length > 0) {scales.yAxes = [{ticks}];}
+
 					const myChart = new Chart(ctx, {
 						type: 'line',
 						data: {datasets: datasets},
 						options: {
 							legend: {display: false},
-							scales: {xAxes: [{type: "time"}]}
+							scales,
 						}
 					});
 				}
