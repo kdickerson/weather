@@ -244,9 +244,14 @@ MM_PER_IN = 25.4
 
 def rebuild_plain_html(data):
 	data2 = data.copy()
+	# Historic average: 30.268 -- Standard Deviation: 0.416
+	data2['pressure_range_min'] = 29.2
+	data2['pressure_range_max'] = 31.3
 	if data2['pressure_units'] == 'inhg':
 		data2['pressure_units'] = 'mmhg'
 		data2['pressure_relative'] = round(data2['pressure_relative'] * MM_PER_IN, 1)
+		data2['pressure_range_min'] = round(data2['pressure_range_min'] * MM_PER_IN)
+		data2['pressure_range_max'] = round(data2['pressure_range_max'] * MM_PER_IN)
 		for entry in data2['historic']:
 			entry['pressureRelative'] = round(entry['pressureRelative'] * MM_PER_IN, 1)
 
@@ -292,8 +297,8 @@ def rebuild_plain_html(data):
 					<br>Daily Low: ${aqi_outdoor_daily_low}
 				</td>
 				<td><canvas id="aqiOutdoor"></canvas></td></tr>
-			<tr><td>Relative Humidity</td><td>${humidity_outdoor} %</td><td><canvas id="humidityOutdoor"></canvas></td></tr>
-			<tr><td>Pressure</td><td>${pressure_relative} ${pressure_units}</td><td><canvas id="pressureRelative"></canvas></td></tr>
+			<tr><td>Relative Humidity</td><td>${humidity_outdoor} %</td><td><canvas id="humidityOutdoor" data-min="0" data-max="100"></canvas></td></tr>
+			<tr><td>Pressure</td><td>${pressure_relative} ${pressure_units}</td><td><canvas id="pressureRelative" data-min="${pressure_range_min}" data-max="${pressure_range_max}"></canvas></td></tr>
 			<tr><td>Wind/Gust</td>
 				<td>${wind_speed}/${wind_gust} ${wind_units} ${wind_direction}
 					<br>Daily Max: ${wind_gust_daily_max}
@@ -514,4 +519,3 @@ if __name__ == "__main__":
 	except Exception as e:
 		print("%s: Plain HTML Rebuild Failed" % datetime.today())
 		print(e)
-
