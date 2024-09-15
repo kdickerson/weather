@@ -315,18 +315,18 @@ def rebuild_plain_html(data):
 			(function() {
 				"use strict";
 
-				var weatherData = ${historic};
+				const weatherData = ${historic};
 
 				function buildChart(canvasId, data, xKey, yKey, yKey2) {
-					var canvas = document.getElementById(canvasId);
+					const canvas = document.getElementById(canvasId);
 					if (!canvas) {console.log('No element found with ID' + canvasId); return;}
 					canvas.style.width = '750px';
 					canvas.style.height = '100px';
-					var ctx = canvas.getContext('2d');
+					const ctx = canvas.getContext('2d');
 
-					var datasets = [];
+					const datasets = [];
 
-					var extractedData = [];
+					let extractedData = [];
 					data.forEach(function(entry) {
 						extractedData.push({x: entry[xKey], y: entry[yKey]});
 					});
@@ -340,7 +340,7 @@ def rebuild_plain_html(data):
 						datasets.push({data: extractedData, fill: false, label: yKey2, pointRadius: 0});
 					}
 
-					var myChart = new Chart(ctx, {
+					const myChart = new Chart(ctx, {
 						type: 'line',
 						data: {datasets: datasets},
 						options: {
