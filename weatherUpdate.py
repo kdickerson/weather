@@ -328,8 +328,8 @@ def rebuild_plain_html(data):
 				function buildChart(canvasId, data, xKey, yKey, yKey2) {
 					const canvas = document.getElementById(canvasId);
 					if (!canvas) {console.log('No element found with ID' + canvasId); return;}
-					canvas.style.width = '750px';
-					canvas.style.height = '100px';
+					canvas.style.width = '800px';
+					canvas.style.height = '120px';
 					const ctx = canvas.getContext('2d');
 
 					const datasets = [];
