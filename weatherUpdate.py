@@ -250,6 +250,8 @@ def rebuild_plain_html(data):
 	if data2['pressure_units'] == 'inhg':
 		data2['pressure_units'] = 'mmhg'
 		data2['pressure_relative'] = round(data2['pressure_relative'] * MM_PER_IN, 1)
+		data2['pressure_relative_daily_low'] = round(data2['pressure_relative_daily_low'] * MM_PER_IN, 1)
+		data2['pressure_relative_daily_high'] = round(data2['pressure_relative_daily_high'] * MM_PER_IN, 1)
 		data2['pressure_range_suggested_min'] = round(data2['pressure_range_suggested_min'] * MM_PER_IN)
 		data2['pressure_range_suggested_max'] = round(data2['pressure_range_suggested_max'] * MM_PER_IN)
 		for entry in data2['historic']:
@@ -298,7 +300,13 @@ def rebuild_plain_html(data):
 				</td>
 				<td><canvas id="aqiOutdoor" data-min="0"></canvas></td></tr>
 			<tr><td>Relative Humidity</td><td>${humidity_outdoor} %</td><td><canvas id="humidityOutdoor" data-min="0" data-max="100"></canvas></td></tr>
-			<tr><td>Pressure</td><td>${pressure_relative} ${pressure_units}</td><td><canvas id="pressureRelative" data-suggested-min="${pressure_range_suggested_min}" data-suggested-max="${pressure_range_suggested_max}"></canvas></td></tr>
+			<tr><td>Pressure</td>
+				<td style="text-align:right;">
+					Daily High: ${pressure_relative_daily_high}
+					<br>(${pressure_units}) ${pressure_relative}
+					<br>Daily Low: ${pressure_relative_daily_low}
+				</td>
+				<td><canvas id="pressureRelative" data-suggested-min="${pressure_range_suggested_min}" data-suggested-max="${pressure_range_suggested_max}"></canvas></td></tr>
 			<tr><td>Wind/Gust</td>
 				<td>${wind_speed}/${wind_gust} ${wind_units} ${wind_direction}
 					<br>Daily Max: ${wind_gust_daily_max}
