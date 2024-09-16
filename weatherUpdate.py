@@ -245,13 +245,13 @@ MM_PER_IN = 25.4
 def rebuild_plain_html(data):
 	data2 = data.copy()
 	# Historic average: 30.268 -- Standard Deviation: 0.416
-	data2['pressure_range_min'] = 29.2
-	data2['pressure_range_max'] = 31.3
+	data2['pressure_range_suggested_min'] = data2['pressure_relative'] - 0.416
+	data2['pressure_range_suggested_max'] = data2['pressure_relative'] + 0.416
 	if data2['pressure_units'] == 'inhg':
 		data2['pressure_units'] = 'mmhg'
 		data2['pressure_relative'] = round(data2['pressure_relative'] * MM_PER_IN, 1)
-		data2['pressure_range_min'] = round(data2['pressure_range_min'] * MM_PER_IN)
-		data2['pressure_range_max'] = round(data2['pressure_range_max'] * MM_PER_IN)
+		data2['pressure_range_suggested_min'] = round(data2['pressure_range_suggested_min'] * MM_PER_IN)
+		data2['pressure_range_suggested_max'] = round(data2['pressure_range_suggested_max'] * MM_PER_IN)
 		for entry in data2['historic']:
 			entry['pressureRelative'] = round(entry['pressureRelative'] * MM_PER_IN, 1)
 
@@ -298,7 +298,7 @@ def rebuild_plain_html(data):
 				</td>
 				<td><canvas id="aqiOutdoor" data-min="0"></canvas></td></tr>
 			<tr><td>Relative Humidity</td><td>${humidity_outdoor} %</td><td><canvas id="humidityOutdoor" data-min="0" data-max="100"></canvas></td></tr>
-			<tr><td>Pressure</td><td>${pressure_relative} ${pressure_units}</td><td><canvas id="pressureRelative" data-min="${pressure_range_min}" data-max="${pressure_range_max}"></canvas></td></tr>
+			<tr><td>Pressure</td><td>${pressure_relative} ${pressure_units}</td><td><canvas id="pressureRelative" data-suggested-min="${pressure_range_suggested_min}" data-suggested-max="${pressure_range_suggested_max}"></canvas></td></tr>
 			<tr><td>Wind/Gust</td>
 				<td>${wind_speed}/${wind_gust} ${wind_units} ${wind_direction}
 					<br>Daily Max: ${wind_gust_daily_max}
@@ -357,6 +357,8 @@ def rebuild_plain_html(data):
 					const ticks = {};
 					if (canvas.dataset.min) {ticks.min = parseFloat(canvas.dataset.min);}
 					if (canvas.dataset.max) {ticks.max = parseFloat(canvas.dataset.max);}
+					if (canvas.dataset.suggestedMin) {ticks.suggestedMin = parseFloat(canvas.dataset.suggestedMin);}
+					if (canvas.dataset.suggestedMax) {ticks.suggestedMax = parseFloat(canvas.dataset.suggestedMax);}
 					if (Object.keys(ticks).length > 0) {scales.yAxes = [{ticks}];}
 
 					const myChart = new Chart(ctx, {
