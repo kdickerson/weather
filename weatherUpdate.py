@@ -245,8 +245,8 @@ MM_PER_IN = 25.4
 def rebuild_plain_html(data):
 	data2 = data.copy()
 	# Historic average: 30.268 -- Standard Deviation: 0.416
-	data2['pressure_range_suggested_min'] = data2['pressure_relative'] - 0.416
-	data2['pressure_range_suggested_max'] = data2['pressure_relative'] + 0.416
+	data2['pressure_range_suggested_min'] = data2['pressure_relative'] - 0.208
+	data2['pressure_range_suggested_max'] = data2['pressure_relative'] + 0.208
 	if data2['pressure_units'] == 'inhg':
 		data2['pressure_units'] = 'mmhg'
 		data2['pressure_relative'] = round(data2['pressure_relative'] * MM_PER_IN, 1)
