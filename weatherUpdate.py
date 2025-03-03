@@ -12,8 +12,8 @@ from string import Template
 import json
 
 DB_PATH = '/home/kyle/weather/weather.db'
-SENSOR_URL = 'http://192.168.1.55/livedata.htm'
-UNITS_URL = 'http://192.168.1.55/station.htm'
+SENSOR_URL = 'http://192.168.1.66/livedata.htm'
+UNITS_URL = 'http://192.168.1.66/station.htm'
 CUMULUS_TXT_PATH = '/var/www/weather/Realtime.txt'
 PLAIN_HTML_PATH = '/var/www/weather/index.html'
 
