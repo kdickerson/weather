@@ -17,6 +17,16 @@ UNITS_URL = 'http://192.168.1.66/station.htm'
 CUMULUS_TXT_PATH = '/var/www/weather/Realtime.txt'
 PLAIN_HTML_PATH = '/var/www/weather/index.html'
 
+def adapt_datetime_iso(val):
+	"""Adapt datetime.datetime to timezone-naive ISO 8601 date."""
+	return val.isoformat()
+
+
+def convert_datetime(val):
+	"""Convert ISO 8601 datetime to datetime.datetime object."""
+	return datetime.fromisoformat(val.decode() if hasattr(val, 'decode') else val)
+
+
 def update_database(data):
 	db = sqlite3.connect(DB_PATH)
 	cursor = db.cursor()
@@ -115,8 +125,8 @@ def update_database(data):
 	db.close()
 
 def fetch_historic_data(data, cursor):
-	now = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
-	_24hrs_ago = (datetime.today() - timedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S')
+	now = datetime.today()
+	_24hrs_ago = datetime.today() - timedelta(days=1)
 	data['historic'] = []
 
 	cursor.execute('SELECT datetime, temp_outdoor, pm25_outdoor, humidity_outdoor, pressure_relative, wind_speed, wind_gust, solar_radiation, uv, temp_indoor, humidity_indoor, rain_hourly FROM weather WHERE datetime > ? AND datetime <= ? ORDER BY datetime asc;', [_24hrs_ago, now])
@@ -138,51 +148,51 @@ def fetch_historic_data(data, cursor):
 	data['historic'] = data['historic'][0::5] # Every 5th element
 
 def fetch_aggregate_data(data, cursor):
-	today = datetime.today().strftime('%Y-%m-%d 00:00:00')
-	tomorrow = (datetime.today() + timedelta(days=1)).strftime('%Y-%m-%d 00:00:00')
+	today = datetime.today().date().isoformat()
+	tomorrow = (datetime.today() + timedelta(days=1)).date().isoformat()
 
 	cursor.execute('SELECT datetime, MAX(temp_indoor) FROM weather WHERE datetime >= ? AND datetime < ?;', [today, tomorrow])
 	data['temp_indoor_daily_high_time'], data['temp_indoor_daily_high'] = cursor.fetchone()
-	data['temp_indoor_daily_high_time'] = datetime.strptime(data['temp_indoor_daily_high_time'], '%Y-%m-%d %H:%M:%S')
+	data['temp_indoor_daily_high_time'] = convert_datetime(data['temp_indoor_daily_high_time'])
 
 	cursor.execute('SELECT datetime, MIN(temp_indoor) FROM weather WHERE datetime >= ? AND datetime < ?;', [today, tomorrow])
 	data['temp_indoor_daily_low_time'], data['temp_indoor_daily_low'] = cursor.fetchone()
-	data['temp_indoor_daily_low_time'] = datetime.strptime(data['temp_indoor_daily_low_time'], '%Y-%m-%d %H:%M:%S')
+	data['temp_indoor_daily_low_time'] = convert_datetime(data['temp_indoor_daily_low_time'])
 
 
 	cursor.execute('SELECT datetime, MAX(temp_outdoor) FROM weather WHERE datetime >= ? AND datetime < ?;', [today, tomorrow])
 	data['temp_outdoor_daily_high_time'], data['temp_outdoor_daily_high'] = cursor.fetchone()
-	data['temp_outdoor_daily_high_time'] = datetime.strptime(data['temp_outdoor_daily_high_time'], '%Y-%m-%d %H:%M:%S')
+	data['temp_outdoor_daily_high_time'] = convert_datetime(data['temp_outdoor_daily_high_time'])
 
 	cursor.execute('SELECT datetime, MIN(temp_outdoor) FROM weather WHERE datetime >= ? AND datetime < ?;', [today, tomorrow])
 	data['temp_outdoor_daily_low_time'], data['temp_outdoor_daily_low'] = cursor.fetchone()
-	data['temp_outdoor_daily_low_time'] = datetime.strptime(data['temp_outdoor_daily_low_time'], '%Y-%m-%d %H:%M:%S')
+	data['temp_outdoor_daily_low_time'] = convert_datetime(data['temp_outdoor_daily_low_time'])
 
 
 	cursor.execute('SELECT datetime, MAX(pm25_outdoor) FROM weather WHERE datetime >= ? AND datetime < ?;', [today, tomorrow])
 	data['pm25_outdoor_daily_high_time'], data['pm25_outdoor_daily_high'] = cursor.fetchone()
-	data['pm25_outdoor_daily_high_time'] = datetime.strptime(data['pm25_outdoor_daily_high_time'], '%Y-%m-%d %H:%M:%S')
+	data['pm25_outdoor_daily_high_time'] = convert_datetime(data['pm25_outdoor_daily_high_time'])
 
 	cursor.execute('SELECT datetime, MIN(pm25_outdoor) FROM weather WHERE datetime >= ? AND datetime < ?;', [today, tomorrow])
 	data['pm25_outdoor_daily_low_time'], data['pm25_outdoor_daily_low'] = cursor.fetchone()
-	data['pm25_outdoor_daily_low_time'] = datetime.strptime(data['pm25_outdoor_daily_low_time'], '%Y-%m-%d %H:%M:%S')
+	data['pm25_outdoor_daily_low_time'] = convert_datetime(data['pm25_outdoor_daily_low_time'])
 
 
 	cursor.execute('SELECT datetime, MAX(pressure_relative) FROM weather WHERE datetime >= ? AND datetime < ?;', [today, tomorrow])
 	data['pressure_relative_daily_high_time'], data['pressure_relative_daily_high'] = cursor.fetchone()
-	data['pressure_relative_daily_high_time'] = datetime.strptime(data['pressure_relative_daily_high_time'], '%Y-%m-%d %H:%M:%S')
+	data['pressure_relative_daily_high_time'] = convert_datetime(data['pressure_relative_daily_high_time'])
 
 	cursor.execute('SELECT datetime, MIN(pressure_relative) FROM weather WHERE datetime >= ? AND datetime < ?;', [today, tomorrow])
 	data['pressure_relative_daily_low_time'], data['pressure_relative_daily_low'] = cursor.fetchone()
-	data['pressure_relative_daily_low_time'] = datetime.strptime(data['pressure_relative_daily_low_time'], '%Y-%m-%d %H:%M:%S')
+	data['pressure_relative_daily_low_time'] = convert_datetime(data['pressure_relative_daily_low_time'])
 
 	cursor.execute('SELECT datetime, MAX(wind_speed) FROM weather WHERE datetime >= ? AND datetime < ?;', [today, tomorrow])
 	data['wind_speed_daily_max_time'], data['wind_speed_daily_max'] = cursor.fetchone()
-	data['wind_speed_daily_max_time'] = datetime.strptime(data['wind_speed_daily_max_time'], '%Y-%m-%d %H:%M:%S')
+	data['wind_speed_daily_max_time'] = convert_datetime(data['wind_speed_daily_max_time'])
 
 	cursor.execute('SELECT datetime, MAX(wind_gust) FROM weather WHERE datetime >= ? AND datetime < ?;', [today, tomorrow])
 	data['wind_gust_daily_max_time'], data['wind_gust_daily_max'] = cursor.fetchone()
-	data['wind_gust_daily_max_time'] = datetime.strptime(data['wind_gust_daily_max_time'], '%Y-%m-%d %H:%M:%S')
+	data['wind_gust_daily_max_time'] = convert_datetime(data['wind_gust_daily_max_time'])
 
 def fetch_data():
 	data = {}
@@ -505,6 +515,9 @@ def calculate_aqi(pm25):
 
 
 if __name__ == "__main__":
+	sqlite3.register_adapter(datetime, adapt_datetime_iso)
+	sqlite3.register_converter("datetime", convert_datetime)
+
 	try:
 		data = fetch_data()
 	except Exception as e:
@@ -529,3 +542,4 @@ if __name__ == "__main__":
 	except Exception as e:
 		print("%s: Plain HTML Rebuild Failed" % datetime.today())
 		print(e)
+
